@@ -156,9 +156,9 @@ stop() {
 
 	# PID=$(<$PIDFILE) - Changed to detection based on actual PID from forever, sicne due to watchDirectory pid could dynamically change
     {% if runAsUser %}
-    PID=$({{suprog}} - {{runAsUser}} -c "export FOREVER_ROOT={{foreverRoot}};{% if envVarsNameValueArray|default(false) %}{% for v in envVarsNameValueArray %}export {{ v[0] }}=$(printf "%q" {{v[1]}});{% endfor %}{% endif %}{{foreverPath}}forever --plain list | sed -n -e '/data:\s*\[[0-9]*\]\s\({{service}}\)\s/p' | awk '{print \$7}'")
+    PID=$({{suprog}} - {{runAsUser}} -c "export FOREVER_ROOT={{foreverRoot}};{% if envVarsNameValueArray|default(false) %}{% for v in envVarsNameValueArray %}export {{ v[0] }}=$(printf "%q" {{v[1]}});{% endfor %}{% endif %}{{foreverPath}}forever --plain list | sed -n -e '/data:\s*\[[0-9]*\]\s\({{service}}\)\s/p' | grep -o '[0-9]*\s*/var/log/{{service}}.log' | awk '{ print $1 }')
     {% else %}
-	PID=$({{foreverPath}}forever --plain list | sed -n -e '/data:\s*\[[0-9]*\]\s\({{service}}\)\s/p' | awk '{print $7}')
+	PID=$({{foreverPath}}forever --plain list | sed -n -e '/data:\s*\[[0-9]*\]\s\({{service}}\)\s/p' | grep -o '[0-9]*\s*/var/log/{{service}}.log' | awk '{ print $1 }')
 	{% endif %}
 
 	if [ -z "$PID" ]; then
@@ -235,7 +235,7 @@ case "$1" in
 	status
 	;;
     restart)
-    	stop
+    stop
 	start
 	;;
     *)
